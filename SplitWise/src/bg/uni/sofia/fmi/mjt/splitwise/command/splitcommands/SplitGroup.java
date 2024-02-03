@@ -1,6 +1,8 @@
 package bg.uni.sofia.fmi.mjt.splitwise.command.splitcommands;
 
 import bg.uni.sofia.fmi.mjt.splitwise.command.CommandBase;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.GroupNotFound;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.NotMemberOfGroup;
 import bg.uni.sofia.fmi.mjt.splitwise.user.User;
 import bg.uni.sofia.fmi.mjt.splitwise.repository.UserRepository;
 
@@ -18,7 +20,11 @@ public class SplitGroup extends CommandBase {
 
     @Override
     public String execute() {
-        userRepository.splitGroup(groupName, user, amount, reason);
-        return null;
+        try {
+            userRepository.splitGroup(groupName, user, amount, reason);
+        } catch (GroupNotFound | NotMemberOfGroup e ){
+            return e.getMessage();
+        }
+        return String.format("You have split %s LV with %s",amount,groupName);
     }
 }

@@ -1,6 +1,7 @@
 package bg.uni.sofia.fmi.mjt.splitwise.command.groupcommands;
 
 import bg.uni.sofia.fmi.mjt.splitwise.command.CommandBase;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.GroupAlreadyExists;
 import bg.uni.sofia.fmi.mjt.splitwise.user.User;
 import bg.uni.sofia.fmi.mjt.splitwise.repository.UserRepository;
 
@@ -17,7 +18,11 @@ public class CreateGroup extends CommandBase {
     }
     @Override
     public String execute() {
-        userRepository.createGroup(members,groupName);
-        return String.format("You successfully created %s group",groupName);
+        try {
+            userRepository.createGroup(members, groupName);
+        } catch(GroupAlreadyExists e){
+            return e.getMessage();
+        }
+        return String.format("You successfully created %s group" + System.lineSeparator(),groupName);
     }
 }

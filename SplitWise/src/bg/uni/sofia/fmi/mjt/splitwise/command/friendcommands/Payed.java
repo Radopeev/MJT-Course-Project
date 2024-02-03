@@ -1,6 +1,7 @@
 package bg.uni.sofia.fmi.mjt.splitwise.command.friendcommands;
 
 import bg.uni.sofia.fmi.mjt.splitwise.command.CommandBase;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.FriendNotFound;
 import bg.uni.sofia.fmi.mjt.splitwise.user.User;
 import bg.uni.sofia.fmi.mjt.splitwise.repository.UserRepository;
 
@@ -15,7 +16,11 @@ public class Payed extends CommandBase {
 
     @Override
     public String execute() {
-        userRepository.payed(payingUser,amount,user);
-        return String.format("%s payed you %s LV",payingUser.getUsername(),amount);
+        try {
+            userRepository.payed(payingUser, amount, user);
+        } catch(FriendNotFound e){
+            return e.getMessage();
+        }
+        return String.format("%s payed you %s LV",payingUser.getUsername() + System.lineSeparator(),amount);
     }
 }

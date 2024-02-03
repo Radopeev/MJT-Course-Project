@@ -6,6 +6,7 @@ import bg.uni.sofia.fmi.mjt.splitwise.user.User;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class Group implements Serializable {
@@ -32,8 +33,22 @@ public class Group implements Serializable {
     }
 
     public void updateDueAmount(double amount,String reason){
-        for(User user : dueAmounts.keySet()){
-            dueAmounts.put(user,new DueAmount(amount,reason));
+        dueAmounts.replaceAll((u, v) -> new DueAmount(amount, reason));
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
         }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Group group = (Group) obj;
+        return Objects.equals(groupName, group.groupName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(groupName, members, dueAmounts);
     }
 }

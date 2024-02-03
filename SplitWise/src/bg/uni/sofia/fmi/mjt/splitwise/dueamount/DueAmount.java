@@ -1,6 +1,8 @@
 package bg.uni.sofia.fmi.mjt.splitwise.dueamount;
 
-public class DueAmount {
+import java.io.Serializable;
+
+public class DueAmount implements Serializable {
     private double amount;
     private String reason;
 

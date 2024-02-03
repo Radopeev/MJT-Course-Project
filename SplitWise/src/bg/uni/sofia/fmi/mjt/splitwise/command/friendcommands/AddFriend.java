@@ -1,6 +1,8 @@
 package bg.uni.sofia.fmi.mjt.splitwise.command.friendcommands;
 
 import bg.uni.sofia.fmi.mjt.splitwise.command.CommandBase;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.AlreadyFriends;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.UserNotFound;
 import bg.uni.sofia.fmi.mjt.splitwise.user.User;
 import bg.uni.sofia.fmi.mjt.splitwise.repository.UserRepository;
 
@@ -12,7 +14,11 @@ public class AddFriend extends CommandBase {
     }
     @Override
     public String execute() {
-        userRepository.addFriendToUser(user,friend);
-        return String.format("You successfully added %s as your friend",friend);
+        try {
+            userRepository.addFriendToUser(user, friend);
+        } catch(UserNotFound | AlreadyFriends e){
+            return e.getMessage();
+        }
+        return String.format("You successfully added %s as your friend" + System.lineSeparator(),friend);
     }
 }

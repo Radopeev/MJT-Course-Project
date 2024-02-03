@@ -11,6 +11,6 @@ public class GetStatus extends CommandBase {
 
     @Override
     public String execute() {
-        return userRepository.getStatus(user);
+        return userRepository.getStatus(user) + System.lineSeparator();
     }
 }

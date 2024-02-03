@@ -1,6 +1,8 @@
 package bg.uni.sofia.fmi.mjt.splitwise.server;
 
 import bg.uni.sofia.fmi.mjt.splitwise.command.CommandBuilder;
+import bg.uni.sofia.fmi.mjt.splitwise.database.DatabaseSaver;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.InvalidCommand;
 import bg.uni.sofia.fmi.mjt.splitwise.user.User;
 import bg.uni.sofia.fmi.mjt.splitwise.repository.UserRepository;
 
@@ -57,7 +59,7 @@ public class AsyncServer {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("Server is shutting down. Saving user and group data...");
 
-                userRepository.writeDataToDatabase(userFile,groupsFile);
+                DatabaseSaver.writeDataToDatabase(userFile,groupsFile,userRepository);
 
                 System.out.println("Server shutdown complete.");
             }));
@@ -88,10 +90,19 @@ public class AsyncServer {
 
                         // Custom processing of received data
                         String receivedData = new String(buffer.array(), 0, buffer.limit());
-                        String responseData = CommandBuilder.newCommand(receivedData,userRepository,loggedUsers.get(sc)).execute();
-                        if(receivedData.contains("login") && responseData.equals("You successfully logged in")){
+                        String responseData=null;
+                        try {
+                            responseData = CommandBuilder.newCommand(receivedData,userRepository,loggedUsers.get(sc)).execute();
+                        } catch (InvalidCommand e){
+                            responseData = e.getMessage();
+                        }
+                        if(receivedData.contains("login") && responseData.contains("You successfully logged in")){
                             String[] parts = receivedData.split(" ");
                             loggedUsers.put(sc,Optional.of(userRepository.getUser(parts[1])));
+                            responseData = responseData + System.lineSeparator() + userRepository.getUser(parts[1]).seeNotifications();
+                        }
+                        if(receivedData.contains("logout") && responseData.equals("You successfully logged out")){
+                            loggedUsers.put(sc,Optional.empty());
                         }
 
                         // Sending the custom response back to the client
