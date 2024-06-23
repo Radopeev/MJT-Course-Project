@@ -1,5 +1,7 @@
 package bg.uni.sofia.fmi.mjt.splitwise.database;
 
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.ExceptionSaver;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.SplitWiseException;
 import bg.uni.sofia.fmi.mjt.splitwise.group.Group;
 import bg.uni.sofia.fmi.mjt.splitwise.user.User;
 
@@ -13,10 +15,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DatabaseReader {
-
     public static Map<String, User> readUsers(Path usersFile) throws IOException {
-        Map<String,User> users = new HashMap<>();
-        if(Files.size(usersFile)> 0) {
+        Map<String, User> users = new HashMap<>();
+        if (!Files.exists(usersFile)) {
+            try {
+                Files.createFile(usersFile);
+            } catch (IOException e) {
+                ExceptionSaver.saveException(new SplitWiseException(e, "No user", e.getStackTrace()));
+                throw new RuntimeException("Error creating users file", e);
+            }
+        }
+        if (Files.size(usersFile) > 0) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(usersFile.toFile()))) {
                 while (true) {
                     try {
@@ -25,6 +34,7 @@ public class DatabaseReader {
                             users.put(user.getUsername(), user);
                         }
                     } catch (EOFException e) {
+                        ExceptionSaver.saveException(new SplitWiseException(e, "No user", e.getStackTrace()));
                         break;
                     }
                 }
@@ -36,8 +46,16 @@ public class DatabaseReader {
     }
 
     public static Map<String, Group> readGroups(Path groupsFile) throws IOException {
+        if (!Files.exists(groupsFile)) {
+            try {
+                Files.createFile(groupsFile);
+            } catch (IOException e) {
+                ExceptionSaver.saveException(new SplitWiseException(e, "No user", e.getStackTrace()));
+                throw new RuntimeException("Error creating groups file", e);
+            }
+        }
         Map<String, Group> groups = new HashMap<>();
-        if(Files.size(groupsFile) > 0) {
+        if (Files.size(groupsFile) > 0) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(groupsFile.toFile()))) {
                 while (true) {
                     try {
@@ -46,15 +64,14 @@ public class DatabaseReader {
                             groups.put(group.getGroupName(), group);
                         }
                     } catch (EOFException e) {
-                        // End of file reached, exit the loop
                         break;
                     }
                 }
             } catch (IOException | ClassNotFoundException e) {
+                ExceptionSaver.saveException(new SplitWiseException(e, "No user", e.getStackTrace()));
                 throw new RuntimeException(e);
             }
         }
         return groups;
     }
-
 }

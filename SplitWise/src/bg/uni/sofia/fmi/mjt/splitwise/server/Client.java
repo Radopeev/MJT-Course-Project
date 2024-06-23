@@ -1,58 +1,84 @@
 package bg.uni.sofia.fmi.mjt.splitwise.server;
 
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.ExceptionSaver;
+import bg.uni.sofia.fmi.mjt.splitwise.exceptions.SplitWiseException;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-
 public class Client {
-
     private static final int SERVER_PORT = 7777;
     private static final String SERVER_HOST = "localhost";
-    private static final int BUFFER_SIZE = 512;
+    private static final int BUFFER_SIZE = 4096;
+    private static boolean isLogged = false;
 
     private static ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
 
     public static void main(String[] args) {
-
         try (SocketChannel socketChannel = SocketChannel.open();
              Scanner scanner = new Scanner(System.in)) {
 
-            socketChannel.connect(new InetSocketAddress(SERVER_HOST, SERVER_PORT));
-
-            System.out.println("Connected to the server.");
+            connectToServer(socketChannel);
 
             while (true) {
-                System.out.print("$");
-                String message = scanner.nextLine(); // read a line from the console
+                String message = readUserInput(scanner);
 
                 if ("quit".equals(message)) {
-                    break;
+                    if (isLoggedOut()) {
+                        break;
+                    } else {
+                        System.out.println("You have to logout before exiting the app" + System.lineSeparator());
+                    }
+                } else {
+                    communicateWithServer(socketChannel, message);
                 }
-
-                buffer.clear(); // switch to writing mode
-                buffer.put(message.getBytes()); // buffer fill
-                buffer.flip(); // switch to reading mode
-                socketChannel.write(buffer); // buffer drain
-
-                buffer.clear(); // switch to writing mode
-                socketChannel.read(buffer); // buffer fill
-                buffer.flip(); // switch to reading mode
-
-                byte[] byteArray = new byte[buffer.remaining()];
-                buffer.get(byteArray);
-                String reply = new String(byteArray, "UTF-8"); // buffer drain
-
-                // if the buffer is a non-direct one, it has a wrapped array and we can get it
-                //String reply = new String(buffer.array(), 0, buffer.position(), "UTF-8"); // buffer drain
-
-                System.out.println(reply);
             }
 
         } catch (IOException e) {
-            throw new RuntimeException("There is a problem with the network communication", e);
+            System.out.println("There is a problem with the network communication");
+            ExceptionSaver.saveException(new SplitWiseException(e, "No user", e.getStackTrace()));
+            throw new RuntimeException();
         }
+    }
+
+    private static boolean isLoggedOut() {
+        return !isLogged;
+    }
+
+    private static void connectToServer(SocketChannel socketChannel) throws IOException {
+        socketChannel.connect(new InetSocketAddress(SERVER_HOST, SERVER_PORT));
+        System.out.println("Connected to the server.");
+    }
+
+    private static String readUserInput(Scanner scanner) {
+        System.out.print("$");
+        return scanner.nextLine();
+    }
+
+    private static void communicateWithServer(SocketChannel socketChannel, String message) throws IOException {
+        buffer.clear();
+        buffer.put(message.getBytes());
+        buffer.flip();
+        socketChannel.write(buffer);
+
+        buffer.clear();
+        socketChannel.read(buffer);
+        buffer.flip();
+
+        byte[] byteArray = new byte[buffer.remaining()];
+        buffer.get(byteArray);
+        String reply = new String(byteArray, StandardCharsets.UTF_8);
+        if (reply.equals("You have successfully logged in" + System.lineSeparator())) {
+            isLogged = true;
+        }
+        if (reply.equals("You have successfully logged out" + System.lineSeparator())) {
+            isLogged = false;
+        }
+
+        System.out.println(reply);
     }
 }

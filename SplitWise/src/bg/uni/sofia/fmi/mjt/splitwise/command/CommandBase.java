@@ -7,7 +7,7 @@ public abstract class CommandBase implements Command {
     protected UserRepository userRepository;
     protected User user;
 
-    public CommandBase(UserRepository userRepository,User user){
+    public CommandBase(UserRepository userRepository, User user) {
         this.userRepository = userRepository;
         this.user = user;
     }

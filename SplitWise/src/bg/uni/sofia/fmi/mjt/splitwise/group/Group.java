@@ -1,54 +1,49 @@
 package bg.uni.sofia.fmi.mjt.splitwise.group;
 
-import bg.uni.sofia.fmi.mjt.splitwise.dueamount.DueAmount;
 import bg.uni.sofia.fmi.mjt.splitwise.user.User;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 public class Group implements Serializable {
     private String groupName;
     private Set<User> members;
-    private Map<User, DueAmount> dueAmounts;
+    private Map<User, Map<String, Double>> dueAmounts;
 
-    public Group(Set<User> members, String groupName){
+    public Group(Set<User> members, String groupName) {
         this.members = members;
         this.groupName = groupName;
         this.dueAmounts = new HashMap<>();
+        for (User curr : members) {
+            dueAmounts.put(curr, new HashMap<>());
+        }
     }
-    public String getGroupName(){
+
+    public String getGroupName() {
         return groupName;
     }
-    public boolean containsUser(User user){
+
+    public boolean containsUser(User user) {
         return members.contains(user);
     }
-    public Set<User> getMembers(){
+
+    public Set<User> getMembers() {
         return members;
     }
-    public Map<User, DueAmount> getDueAmounts(){
+
+    public Map<User, Map<String, Double>> getDueAmounts() {
         return dueAmounts;
     }
 
-    public void updateDueAmount(double amount,String reason){
-        dueAmounts.replaceAll((u, v) -> new DueAmount(amount, reason));
-    }
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        Group group = (Group) obj;
-        return Objects.equals(groupName, group.groupName);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(groupName, members, dueAmounts);
+    public void addDueAmount(double amount, String reason) {
+        dueAmounts.forEach((key, value) -> {
+            if (value.containsKey(reason)) {
+                value.replace(reason, value.get(reason) + amount);
+            } else {
+                value.put(reason, amount);
+            }
+        });
     }
 }
