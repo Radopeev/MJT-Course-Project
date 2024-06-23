@@ -41,6 +41,10 @@ public class User implements Serializable {
         splitHistory = new ArrayList<>();
     }
 
+    public List<SplitHistoryEntry> getSplitHistory() {
+        return splitHistory;
+    }
+
     public String seeNotifications() {
         if (friendsNotifications.isEmpty() && groupsNotifications.isEmpty()) {
             return "No notifications to show" + System.lineSeparator();
